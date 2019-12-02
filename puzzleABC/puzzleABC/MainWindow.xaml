@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:puzzleABC"
         mc:Ignorable="d"
+        MouseMove="Mouse_Move"
         Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
     <Canvas Name="myCanvas">
         <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Canvas.Left="400" Canvas.Top="30">

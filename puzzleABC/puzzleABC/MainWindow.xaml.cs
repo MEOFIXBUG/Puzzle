@@ -102,7 +102,6 @@ namespace puzzleABC
                 myline.Stroke = Brushes.DarkGray;
                 myCanvas.Children.Add(myline);
             }
-
         }
 
         private void SetPiecesPosition()
@@ -121,8 +120,65 @@ namespace puzzleABC
                         myCanvas.Children.Add(cropImage);
                         Canvas.SetLeft(cropImage, startX + j * width);
                         Canvas.SetTop(cropImage, startY + i * height);
+
+                        cropImage.MouseLeftButtonDown += beginDrag;
+                        cropImage.PreviewMouseLeftButtonUp += endDrag;
                     }
                 }
+            }
+        }
+        Tuple<int, int> lastCell;
+        private void endDrag(object sender, MouseButtonEventArgs e)
+        {
+            isDragging = false;
+            var position = e.GetPosition(this);
+            var cellX = (int)(position.X - startX) / width;
+            var cellY = (int)(position.Y - startY) / height;
+
+            if (cellX < mCols && cellY < mRows)
+            {
+                Canvas.SetLeft(_selectedCropImage, startX + cellX * width);
+                Canvas.SetTop(_selectedCropImage, startY + cellY * height);
+            } else
+            {
+                Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * width);
+                Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * height);
+            }
+
+        }
+
+        bool isDragging = false;
+
+        Image _selectedCropImage = null;
+        Point _lastPosition;
+       
+        private void beginDrag(object sender, MouseButtonEventArgs e)
+        {
+            var position = e.GetPosition(this);
+            var cellX = (int)(position.X - startX) / width;
+            var cellY = (int)(position.Y - startY) / height;
+            lastCell = new Tuple<int, int>(cellX, cellY);
+
+            _selectedCropImage = sender as Image;
+            _lastPosition = e.GetPosition(this);
+            isDragging = true;
+        }
+        private void Mouse_Move(object sender, MouseEventArgs e)
+        {
+            if (isDragging)
+            {
+                var position = e.GetPosition(this);
+                var dx = position.X - _lastPosition.X;
+                var dy = position.Y - _lastPosition.Y;
+
+                var lastLeft = Canvas.GetLeft(_selectedCropImage);
+                var lastTop = Canvas.GetTop(_selectedCropImage); 
+                Canvas.SetLeft(_selectedCropImage, lastLeft + dx);
+                Canvas.SetTop(_selectedCropImage, lastTop + dy);
+
+                _lastPosition = position;
+
+
             }
         }
     }
