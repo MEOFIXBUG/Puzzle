@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:puzzleABC"
         mc:Ignorable="d"
         MouseMove="Mouse_Move"
+        KeyDown="Window_KeyDown"
         Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
     <Canvas Name="myCanvas">
         <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Canvas.Left="400" Canvas.Top="30">

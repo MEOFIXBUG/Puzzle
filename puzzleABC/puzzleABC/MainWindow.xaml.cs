@@ -34,11 +34,13 @@ namespace puzzleABC
         const int mRows = 3;
         const int mCols = 3;
         CroppedBitmap[] objImg;
+        Image[] images;
         int[] map;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             objImg = new CroppedBitmap[9];
             map = new int[mRows * mCols];
+            images = new Image[9];
             var screen = new OpenFileDialog();
 
             if (screen.ShowDialog() == true)
@@ -53,7 +55,7 @@ namespace puzzleABC
                 Canvas.SetLeft(previewImage, 440);
                 //Canvas.SetTop(previewImage, 10);
                 CutImage(source);
-                SetPiecesPosition();
+          ///     SetPiecesPosition();
                 DrawPuzzleBoard();
                 Shuffle();
             }
@@ -74,6 +76,17 @@ namespace puzzleABC
                         var cropBitmap = new CroppedBitmap(source, rect);
                         objImg[3 * i + j] = cropBitmap;
                         map[3 * i + j] = (3 * i + j) % (mRows * mCols);
+                        
+                        
+                    }
+                    if (mRows * i + j != mRows * mCols)
+                    {
+                        images[3 * i + j] = new Image();
+                        images[3 * i + j].Stretch = Stretch.Fill;
+                        images[3 * i + j].Width = width;
+                        images[3 * i + j].Height = height;
+                        images[3 * i + j].Source = objImg[map[3 * i + j]];
+                        images[3 * i + j].Uid = $"{3 * i + j}";
                     }
                 }
             }
@@ -122,8 +135,9 @@ namespace puzzleABC
                         cropImage.Stretch = Stretch.Fill;
                         cropImage.Width = width;
                         cropImage.Height = height;
+                      //  cropImage.Tag = mRows * i + j;
                         cropImage.Source = objImg[mRows * i + j];
-
+                        
                     }
                 }
             }
@@ -152,17 +166,13 @@ namespace puzzleABC
                 for (int j = 0; j < mCols; j++)
                     if (!((i == mRows - 1) && (j == mCols - 1)))
                     {
-                        var cropImage = new Image();
-                        cropImage.Stretch = Stretch.Fill;
-                        cropImage.Width = width;
-                        cropImage.Height = height;
-                        cropImage.Source = objImg[map[3 * i + j]];
-                        myCanvas.Children.Add(cropImage);
-                        Canvas.SetLeft(cropImage, startX + j * width);
-                        Canvas.SetTop(cropImage, startY + i * height);
-                        cropImage.MouseLeftButtonDown += beginDrag;
-                        cropImage.PreviewMouseLeftButtonUp += endDrag;
-                        cropImage.Tag = 3 * i + j;
+                       
+                        myCanvas.Children.Add(images[map[3 * i + j]]);
+                        Canvas.SetLeft(images[map[3 * i + j]], startX + j * width);
+                        Canvas.SetTop(images[map[3 * i + j]], startY + i * height);
+                        images[map[3 * i + j]].MouseLeftButtonDown += beginDrag;
+                        images[map[3 * i + j]].PreviewMouseLeftButtonUp += endDrag;
+                    //    images[map[3 * i + j]].Tag = 3 * i + j;
                     }
             }
 
@@ -278,6 +288,163 @@ namespace puzzleABC
             }
         }
 
+        //Use keyboard
+        int getIndexNullImage()
+        {
+            for (int i = 0; i < map.Length; i++)
+            {
+                if (map[i] == -1) return i;
+            }
+            return -2;
+        }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+
+            int indexNull = getIndexNullImage();
+            int cellX = indexNull % mCols;
+            int cellY = indexNull / mRows;
+            var oldImage = new Image();
+            var newImage = new Image();
+
+            oldImage.Stretch = Stretch.Fill;
+            oldImage.Width = width;
+            oldImage.Height = height;
+
+/*            newImage.Stretch = Stretch.Fill;
+            newImage.Width = width;
+            newImage.Height = height;
+            newImage.Source = objImg[map[3 * cellY + cellX]];*/
+            switch (e.Key)
+            {
+                case Key.Down:
+                    if (canMove(cellX, cellY, cellX, cellY - 1))
+                    {
+                        int index = 3 * (cellY - 1) + cellX;
+                        oldImage.Source = objImg[map[index]];
+                        var images2 = myCanvas.Children.OfType<Image>().ToList();
+                        foreach (var image in images2)
+                        {
+                            try
+                            {
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY - 1) + cellX])
+                                {
+                                    myCanvas.Children.Remove(image);
+                                    break;
+                                }
+                            }
+                            catch (Exception r)
+                            {
+
+                            }
+
+                        }
+                        //myCanvas.Children.SetLeft(images[map[3 * (cellY - 1) + cellX]]);
+                        /*                        Canvas.SetLeft(images[map[3 * (cellY - 1) + cellX]], startX + cellX * width);
+                                                Canvas.SetTop(images[map[3 * (cellY - 1) + cellX]], startY + (cellY - 1) * height);*/
+                      //  myCanvas.Children.Remove(images[map[index]]);
+                        
+                     //  Canvas.SetLeft(oldImage, (startX + mRows * mCel
+                        doMove(ref oldImage, cellX, cellY, cellX, cellY - 1);
+                    }
+
+                    break;
+                case Key.Up:
+                    if (canMove(cellX, cellY, cellX, cellY + 1))
+                    {
+                        oldImage.Source = objImg[map[3 * (cellY + 1) + (cellX)]];
+                        var images2 = myCanvas.Children.OfType<Image>().ToList();
+                        foreach (var image in images2)
+                        {
+
+                            try
+                            {
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY + 1) + cellX])
+                                {
+                                    myCanvas.Children.Remove(image);
+                                    break;
+                                }
+                            } catch(Exception r)
+                            {
+
+                            }
+
+                        }
+                        //  var images = myCanvas.Children.OfType<Image>().ToList();
+                        //   myCanvas.Children.Remove(images[map[3 * (cellY+1) + cellX]]);
+                        //                        myCanvas.Children.Add(oldImage);
+                        doMove(ref oldImage, cellX, cellY, cellX, cellY + 1);
+                    }
+                    break;
+                case Key.Left:
+                    if (canMove(cellX, cellY, cellX + 1, cellY))
+                    {
+                        oldImage.Source = objImg[map[3 * (cellY) + cellX + 1]];
+                        var images2 = myCanvas.Children.OfType<Image>().ToList();
+                        foreach (var image in images2)
+                        {
+
+                            try
+                            {
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY) + cellX+1])
+                                {
+                                    myCanvas.Children.Remove(image);
+                                    break;
+                                }
+                            }
+                            catch (Exception r)
+                            {
+
+                            }
+
+                        }
+                        doMove(ref oldImage, cellX, cellY, cellX + 1, cellY);
+
+                    }
+                    break;
+                case Key.Right:
+                    if (canMove(cellX, cellY, cellX - 1, cellY))
+                    {
+                        oldImage.Source = objImg[map[3 * (cellY) + cellX - 1]];
+                        var images2 = myCanvas.Children.OfType<Image>().ToList();
+                        foreach (var image in images2)
+                        {
+
+                            try
+                            {
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY )+ cellX - 1])
+                                {
+                                    myCanvas.Children.Remove(image);
+                                    break;
+                                }
+                            }
+                            catch (Exception r)
+                            {
+
+                            }
+
+                        }
+                       
+                        doMove(ref oldImage, cellX, cellY, cellX - 1, cellY);
+                    }
+                    break;
+            }
+        }
+
+        void doMove(ref Image image, int nX, int nY, int oX, int oY)
+        {
+            myCanvas.Children.Add(image);
+            image.Uid = $"{map[mRows * oY + oX]}";
+            Canvas.SetLeft(image, startX + nX * width);
+            Canvas.SetTop(image, startY + nY * height);
+            //  myCanvas.Children.Add(image);
+            map[mRows * nY + nX] = map[mRows * oY + oX];
+            map[mRows * oY + oX] = -1;
+        }
+
+        private void Window_KeyDown_1(object sender, KeyEventArgs e)
+        {
+
+        }
     }
 }
