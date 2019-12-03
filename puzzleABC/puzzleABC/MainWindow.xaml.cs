@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -76,6 +77,7 @@ namespace puzzleABC
                     }
                 }
             }
+            map[3 * (mRows-1) + mCols -1] = -1;
         }
 
         private void DrawPuzzleBoard()
@@ -131,13 +133,13 @@ namespace puzzleABC
         {
             Random r = new Random();
             int n = mRows * mCols - 1;
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < 5; i++)
             {
-                int i1 = 0, i2 = 0;
+                int i1 = 1, i2 = 1;
                 while (i1 == i2)
                 {
-                    i1 = r.Next(1, n);
-                    i2 = r.Next(1, n);
+                    i1 = r.Next(0, n-2);
+                    i2 = r.Next(0, n-2);
                 }
 
                 int temp = map[i1];
@@ -169,33 +171,64 @@ namespace puzzleABC
         Tuple<int, int> lastCell;
         bool gameOver = false;
 
-        private void endDrag2(object sender, MouseEventArgs e)
+        bool canMove(int x1, int y1, int x2, int y2)
         {
+            if (x1 < 0 || x1 >= mCols) return false;
+            if (x2 < 0 || x2 >= mCols) return false;
+            if (y1 < 0 || y1 >= mRows) return false;
+            if (y2 < 0 || y2 >= mRows) return false;
 
-            Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * width);
-            Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * height);
-
-            isDragging = false;
+            if (map[3*y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
+            {
+                return true;
+            }
+            return false;
         }
-
+        bool checkWin()
+        {
+            int size = mRows * mCols;
+            for (int i = 0; i < size - 1; i++)
+            {
+                if (map[i] != i) return false;
+            }
+            return true;
+        }
         private void endDrag(object sender, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(this);
             var cellX = (int)(position.X - startX) / width;
             var cellY = (int)(position.Y - startY) / height;
-            if (cellX < mCols && cellY < mRows && map[3 * cellX + cellY] == 0 && isDragging == true)
+            isDragging = false;
+            if (canMove(cellX, cellY, lastCell.Item1, lastCell.Item2))
             {
                 Canvas.SetLeft(_selectedCropImage, startX + cellX * width);
                 Canvas.SetTop(_selectedCropImage, startY + cellY * height);
-                map[3 * cellX + cellY] = map[3 * lastCell.Item1 + lastCell.Item2];
-                map[3 * lastCell.Item1 + lastCell.Item2] = 0;
+                if (map[3 * lastCell.Item2 + lastCell.Item1] != -1)
+                {
+                    map[3 * cellY + cellX] = map[3 * lastCell.Item2 + lastCell.Item1];
+                    map[3 * lastCell.Item2 + lastCell.Item1] = -1;
+
+                }
+                if (checkWin() == true)
+                {
+                    MessageBox.Show("Win");
+
+                } else
+                {
+                    Debug.WriteLine(map.ToString());
+                }
             }
             else
             {
+                if (checkWin() == true)
+                {
+                    MessageBox.Show("Win");
+
+                }
                 Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * width);
                 Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * height);
             }
-            isDragging = false;
+
 
 
         }
