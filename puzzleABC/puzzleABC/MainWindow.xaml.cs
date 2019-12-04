@@ -31,16 +31,16 @@ namespace puzzleABC
         const int startY = 30;
         int height = 120;
         int width = 120;
-        const int mRows = 3;
-        const int mCols = 3;
+        const int mRows = 5;
+        const int mCols = 5;
         CroppedBitmap[] objImg;
         Image[] images;
         int[] map;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            objImg = new CroppedBitmap[9];
+            objImg = new CroppedBitmap[mRows * mCols];
             map = new int[mRows * mCols];
-            images = new Image[9];
+            images = new Image[mRows * mCols];
             var screen = new OpenFileDialog();
 
             if (screen.ShowDialog() == true)
@@ -63,34 +63,34 @@ namespace puzzleABC
         }
         private void CutImage(BitmapImage source)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < mRows; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < mCols; j++)
                 {
                     if (!((i == mRows - 1) && (j == mCols - 1)))
                     {
-                        height = (int)source.Height / 3;
-                        width = (int)source.Width / 3;
+                        height = (int)source.Height / mRows;
+                        width = (int)source.Width / mCols;
                         //Debug.WrbiteLine($"Len = {len}");
                         var rect = new Int32Rect(j * width, i * height, width, height);
                         var cropBitmap = new CroppedBitmap(source, rect);
-                        objImg[3 * i + j] = cropBitmap;
-                        map[3 * i + j] = (3 * i + j) % (mRows * mCols);
+                        objImg[mRows * i + j] = cropBitmap;
+                        map[mRows * i + j] = (mRows * i + j) % (mRows * mCols);
                         
                         
                     }
                     if (mRows * i + j != mRows * mCols)
                     {
-                        images[3 * i + j] = new Image();
-                        images[3 * i + j].Stretch = Stretch.Fill;
-                        images[3 * i + j].Width = width;
-                        images[3 * i + j].Height = height;
-                        images[3 * i + j].Source = objImg[map[3 * i + j]];
-                        images[3 * i + j].Uid = $"{3 * i + j}";
+                        images[mRows * i + j] = new Image();
+                        images[mRows * i + j].Stretch = Stretch.Fill;
+                        images[mRows * i + j].Width = width;
+                        images[mRows * i + j].Height = height;
+                        images[mRows * i + j].Source = objImg[map[mRows * i + j]];
+                        images[mRows * i + j].Uid = $"{mRows * i + j}";
                     }
                 }
             }
-            map[3 * (mRows-1) + mCols -1] = -1;
+            map[mRows * (mRows-1) + mCols -1] = -1;
         }
 
         private void DrawPuzzleBoard()
@@ -237,8 +237,8 @@ namespace puzzleABC
             {
                 for (int j = 0; j < mCols; j++)
                 {
-                    if (3 * i + j != -1)
-                    Debug.Write(map[3 * i + j]);
+                    if (mRows * i + j != -1)
+                    Debug.Write(map[mRows * i + j]);
                 }
                 Debug.WriteLine("");
             }
@@ -246,15 +246,14 @@ namespace puzzleABC
             for (int i = 0; i < mRows; i++)
             {
                 for (int j = 0; j < mCols; j++)
-                    if (map[3*i+j]!=-1)
+                    if (map[mRows * i+j]!=-1)
                     {
                        
-                        myCanvas.Children.Add(images[map[3 * i + j]]);
-                        Canvas.SetLeft(images[map[3 * i + j]], startX + j * width);
-                        Canvas.SetTop(images[map[3 * i + j]], startY + i * height);
-                        images[map[3 * i + j]].MouseLeftButtonDown += beginDrag;
-                        images[map[3 * i + j]].PreviewMouseLeftButtonUp += endDrag;
-                    //    images[map[3 * i + j]].Tag = 3 * i + j;
+                        myCanvas.Children.Add(images[map[mRows * i + j]]);
+                        Canvas.SetLeft(images[map[mRows * i + j]], startX + j * width);
+                        Canvas.SetTop(images[map[mRows * i + j]], startY + i * height);
+                        images[map[mRows * i + j]].MouseLeftButtonDown += beginDrag;
+                        images[map[mRows * i + j]].PreviewMouseLeftButtonUp += endDrag;
                     }
             }
 
@@ -270,7 +269,7 @@ namespace puzzleABC
             if (y1 < 0 || y1 >= mRows) return false;
             if (y2 < 0 || y2 >= mRows) return false;
 
-            if (map[3*y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
+            if (map[mRows * y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
             {
                 return true;
             }
@@ -374,7 +373,7 @@ namespace puzzleABC
                 case Key.Down:
                     if (canMove(cellX, cellY, cellX, cellY - 1))
                     {
-                        int index = 3 * (cellY - 1) + cellX;
+                        int index = mRows * (cellY - 1) + cellX;
                         oldImage.Source = objImg[map[index]];
                         var images2 = myCanvas.Children.OfType<Image>().ToList();
                         foreach (var image in images2)
@@ -399,7 +398,7 @@ namespace puzzleABC
                 case Key.Up:
                     if (canMove(cellX, cellY, cellX, cellY + 1))
                     {
-                        oldImage.Source = objImg[map[3 * (cellY + 1) + (cellX)]];
+                        oldImage.Source = objImg[map[mRows * (cellY + 1) + (cellX)]];
                         var images2 = myCanvas.Children.OfType<Image>().ToList();
                         foreach (var image in images2)
                         {
@@ -421,7 +420,7 @@ namespace puzzleABC
                 case Key.Left:
                     if (canMove(cellX, cellY, cellX + 1, cellY))
                     {
-                        oldImage.Source = objImg[map[3 * (cellY) + cellX + 1]];
+                        oldImage.Source = objImg[map[mRows * (cellY) + cellX + 1]];
                         var images2 = myCanvas.Children.OfType<Image>().ToList();
                         foreach (var image in images2)
                         {
@@ -446,7 +445,7 @@ namespace puzzleABC
                 case Key.Right:
                     if (canMove(cellX, cellY, cellX - 1, cellY))
                     {
-                        oldImage.Source = objImg[map[3 * (cellY) + cellX - 1]];
+                        oldImage.Source = objImg[map[mRows * (cellY) + cellX - 1]];
                         var images2 = myCanvas.Children.OfType<Image>().ToList();
                         foreach (var image in images2)
                         {
