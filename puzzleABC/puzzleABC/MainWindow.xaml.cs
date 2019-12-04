@@ -147,24 +147,106 @@ namespace puzzleABC
         {
             Random r = new Random();
             int n = mRows * mCols - 1;
-            for (int i = 0; i < 5; i++)
+            int lastMove = -1;
+            bool isDup = false;
+            int i2;
+            for (int i = 0; i < 99; i++)
             {
-                int i1 = 1, i2 = 1;
-                while (i1 == i2)
+                int i1 = getIndexNullImage();
+                int cellX = i1 % mCols;
+                int cellY = i1 / mRows;
+                i2 = r.Next(0, 11111);
+                
+                i2 = i2 % 4;
+                Debug.WriteLine(i2);
+                switch (i2)
                 {
-                    i1 = r.Next(0, n-2);
-                    i2 = r.Next(0, n-2);
+                    case 0:
+                        i2 = mRows * (cellY - 1) + cellX;
+                        if (lastMove == 1)
+                        {
+                            i--;
+                            isDup = true;
+                        }
+                        else
+                        {
+                            lastMove = 0;
+                            isDup = false;
+                        }
+                        break;
+                    case 1:
+                        i2 = mRows * (cellY + 1) + cellX;
+                        if (lastMove == 0)
+                        {
+                            i--;
+                            isDup = true;
+                        }
+                        else
+                        {
+                            lastMove = 1;
+                            isDup = false;
+                        }
+                        break;
+                    case 2:
+                        i2 = mRows * (cellY) + cellX + 1;
+                        if (lastMove == 3)
+                        {
+                            i--;
+                            isDup = true;
+                        }
+                        else
+                        {
+                            lastMove = 2;
+                            isDup = false;
+                        }
+                        break;
+                    case 3:
+                        i2 = mRows * (cellY) + cellX - 1;
+                        if (lastMove == 2)
+                        {
+                            i--;
+                            isDup = true;
+                        }
+                        else
+                        {
+                            lastMove = 3;
+                            isDup = false;
+
+                        }
+                        break;
+                }
+                if (isDup == true) continue;
+                int oldX = i2 % mCols;
+                int oldY = i2 / mRows;
+
+                if (canMove(cellX, cellY, oldX, oldY))
+                {
+                    int temp = map[i1];
+                    map[i1] = map[i2];
+                    map[i2] = temp;
+                }
+                else
+                {
+                    i--;
                 }
 
-                int temp = map[i1];
-                map[i1] = map[i2];
-                map[i2] = temp;
+
+            }
+
+            for(int i =0; i< mRows; i++)
+            {
+                for (int j = 0; j < mCols; j++)
+                {
+                    if (3 * i + j != -1)
+                    Debug.Write(map[3 * i + j]);
+                }
+                Debug.WriteLine("");
             }
 
             for (int i = 0; i < mRows; i++)
             {
                 for (int j = 0; j < mCols; j++)
-                    if (!((i == mRows - 1) && (j == mCols - 1)))
+                    if (map[3*i+j]!=-1)
                     {
                        
                         myCanvas.Children.Add(images[map[3 * i + j]]);
@@ -211,34 +293,12 @@ namespace puzzleABC
             isDragging = false;
             if (canMove(cellX, cellY, lastCell.Item1, lastCell.Item2))
             {
-                Canvas.SetLeft(_selectedCropImage, startX + cellX * width);
-                Canvas.SetTop(_selectedCropImage, startY + cellY * height);
-                if (map[3 * lastCell.Item2 + lastCell.Item1] != -1)
-                {
-                    map[3 * cellY + cellX] = map[3 * lastCell.Item2 + lastCell.Item1];
-                    map[3 * lastCell.Item2 + lastCell.Item1] = -1;
-
-                }
-                if (checkWin() == true)
-                {
-                    MessageBox.Show("Win");
-
-                } else
-                {
-                    Debug.WriteLine(map.ToString());
-                }
+                doMove(cellX, cellY, lastCell.Item1, lastCell.Item2);
             }
             else
             {
-                if (checkWin() == true)
-                {
-                    MessageBox.Show("Win");
-
-                }
-                Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * width);
-                Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * height);
+                doMove(lastCell.Item1, lastCell.Item2, lastCell.Item1, lastCell.Item2);
             }
-
 
 
         }
@@ -257,7 +317,6 @@ namespace puzzleABC
             {
                 lastCell = new Tuple<int, int>(cellX, cellY);
             }
-            // this.CaptureMouse();
             _selectedCropImage = sender as Image;
             _lastPosition = e.GetPosition(this);
             isDragging = true;
@@ -310,11 +369,6 @@ namespace puzzleABC
             oldImage.Stretch = Stretch.Fill;
             oldImage.Width = width;
             oldImage.Height = height;
-
-/*            newImage.Stretch = Stretch.Fill;
-            newImage.Width = width;
-            newImage.Height = height;
-            newImage.Source = objImg[map[3 * cellY + cellX]];*/
             switch (e.Key)
             {
                 case Key.Down:
@@ -329,23 +383,16 @@ namespace puzzleABC
                             {
                                 if (Int32.Parse(image.Uid) == map[mRows * (cellY - 1) + cellX])
                                 {
-                                    myCanvas.Children.Remove(image);
+                                    _selectedCropImage = image;
                                     break;
                                 }
                             }
                             catch (Exception r)
                             {
-
                             }
 
                         }
-                        //myCanvas.Children.SetLeft(images[map[3 * (cellY - 1) + cellX]]);
-                        /*                        Canvas.SetLeft(images[map[3 * (cellY - 1) + cellX]], startX + cellX * width);
-                                                Canvas.SetTop(images[map[3 * (cellY - 1) + cellX]], startY + (cellY - 1) * height);*/
-                      //  myCanvas.Children.Remove(images[map[index]]);
-                        
-                     //  Canvas.SetLeft(oldImage, (startX + mRows * mCel
-                        doMove(ref oldImage, cellX, cellY, cellX, cellY - 1);
+                        doMove(cellX, cellY, cellX, cellY - 1);
                     }
 
                     break;
@@ -361,19 +408,14 @@ namespace puzzleABC
                             {
                                 if (Int32.Parse(image.Uid) == map[mRows * (cellY + 1) + cellX])
                                 {
-                                    myCanvas.Children.Remove(image);
+                                    _selectedCropImage = image;
                                     break;
                                 }
                             } catch(Exception r)
                             {
-
                             }
-
                         }
-                        //  var images = myCanvas.Children.OfType<Image>().ToList();
-                        //   myCanvas.Children.Remove(images[map[3 * (cellY+1) + cellX]]);
-                        //                        myCanvas.Children.Add(oldImage);
-                        doMove(ref oldImage, cellX, cellY, cellX, cellY + 1);
+                        doMove(cellX, cellY, cellX, cellY + 1);
                     }
                     break;
                 case Key.Left:
@@ -388,17 +430,16 @@ namespace puzzleABC
                             {
                                 if (Int32.Parse(image.Uid) == map[mRows * (cellY) + cellX+1])
                                 {
-                                    myCanvas.Children.Remove(image);
+                                    _selectedCropImage = image;
                                     break;
                                 }
                             }
                             catch (Exception r)
                             {
-
                             }
 
                         }
-                        doMove(ref oldImage, cellX, cellY, cellX + 1, cellY);
+                        doMove(cellX, cellY, cellX + 1, cellY);
 
                     }
                     break;
@@ -414,37 +455,41 @@ namespace puzzleABC
                             {
                                 if (Int32.Parse(image.Uid) == map[mRows * (cellY )+ cellX - 1])
                                 {
-                                    myCanvas.Children.Remove(image);
+                                    _selectedCropImage = image;
+                                    doMove(cellX, cellY, cellX - 1, cellY);
                                     break;
                                 }
                             }
                             catch (Exception r)
                             {
-
                             }
-
                         }
                        
-                        doMove(ref oldImage, cellX, cellY, cellX - 1, cellY);
+                        
                     }
                     break;
             }
         }
 
-        void doMove(ref Image image, int nX, int nY, int oX, int oY)
+        void doMove(int nX, int nY, int oX, int oY)
         {
-            myCanvas.Children.Add(image);
-            image.Uid = $"{map[mRows * oY + oX]}";
-            Canvas.SetLeft(image, startX + nX * width);
-            Canvas.SetTop(image, startY + nY * height);
+        //    myCanvas.Children.Add(image);
+            _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
+            Canvas.SetLeft(_selectedCropImage, startX + nX * width);
+            Canvas.SetTop(_selectedCropImage, startY + nY * height);
+            if (nX == oX && nY == oY)
+            {
+                return;
+            }
             //  myCanvas.Children.Add(image);
             map[mRows * nY + nX] = map[mRows * oY + oX];
             map[mRows * oY + oX] = -1;
-        }
 
-        private void Window_KeyDown_1(object sender, KeyEventArgs e)
-        {
 
+            if (checkWin() == true)
+            {
+                MessageBox.Show("Win");
+            }
         }
     }
 }
