@@ -1,8 +1,10 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,14 +23,15 @@ namespace puzzleABC
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = this;
         }
-        const int startX = 30;
-        const int startY = 30;
+        const int startX = 0;
+        const int startY = 0;
         int height = 120;
         int width = 120;
         const int mRows = 5;
@@ -36,8 +39,32 @@ namespace puzzleABC
         CroppedBitmap[] objImg;
         Image[] images;
         int[] map;
+
+        bool isDragging = false;
+
+        Image _selectedCropImage = null;
+        Point _lastPosition;
+        Tuple<int, int> lastCell;
+        bool gameOver = false;
+
+        string _previewImageSource;
+        int _mainWindowHeight;
+        int _mainWindowWidth;
+        public string PreviewImageSource { get => _previewImageSource; set { _previewImageSource = value; OnPropertyChanged("PreviewImageSource"); } }
+
+        public int MainWindowHeight { get => _mainWindowHeight; set { OnPropertyChanged(); _mainWindowHeight = value; } }
+
+        public int MainWindowWidth { get => _mainWindowWidth; set { OnPropertyChanged(); _mainWindowWidth = value; } }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            MainWindowHeight = (int)mainWindow.Height - (int)SystemParameters.CaptionHeight;
             objImg = new CroppedBitmap[mRows * mCols];
             map = new int[mRows * mCols];
             images = new Image[mRows * mCols];
@@ -45,52 +72,63 @@ namespace puzzleABC
 
             if (screen.ShowDialog() == true)
             {
+                PreviewImageSource = screen.FileName;
                 var source = new BitmapImage(
                    new Uri(screen.FileName, UriKind.Absolute));
-
+                var image = new Image();
+                var screenWidth = SystemParameters.WorkArea.Width;
+                var screenHeight = SystemParameters.WorkArea.Height;
                 //previewImage.Width = 400;
                 //previewImage.Height = 400;
-                previewImage.Source = source;
+                //previewImage.Source = source;
 
-                Canvas.SetLeft(previewImage, 440);
+                //Canvas.SetLeft(previewImage, 440);
                 //Canvas.SetTop(previewImage, 10);
                 CutImage(source);
-          ///     SetPiecesPosition();
+                //SetPiecesPosition();
                 DrawPuzzleBoard();
                 Shuffle();
             }
 
         }
+
         private void CutImage(BitmapImage source)
         {
+            var minPixelEdge = source.PixelWidth < source.PixelHeight ? (int)source.PixelWidth : (int)source.PixelHeight;
+            var minEdge = (int)MainWindowHeight - (int)SystemParameters.CaptionHeight - 10;
+            var firstCroppedBitmap = new CroppedBitmap(source, new Int32Rect(0, 0, minPixelEdge, minPixelEdge));
+            previewImage.Source = firstCroppedBitmap;
+            var pixelHeight = minPixelEdge / mRows;
+            var pixelWidth = minPixelEdge / mCols;
+            height = minEdge / mRows;
+            width = minEdge / mCols;
+
             for (int i = 0; i < mRows; i++)
             {
                 for (int j = 0; j < mCols; j++)
                 {
                     if (!((i == mRows - 1) && (j == mCols - 1)))
                     {
-                        height = (int)source.Height / mRows;
-                        width = (int)source.Width / mCols;
                         //Debug.WrbiteLine($"Len = {len}");
-                        var rect = new Int32Rect(j * width, i * height, width, height);
-                        var cropBitmap = new CroppedBitmap(source, rect);
+                        var rect = new Int32Rect(j * pixelWidth, i * pixelHeight, pixelHeight, pixelHeight);
+                        var cropBitmap = new CroppedBitmap(firstCroppedBitmap, rect);
                         objImg[mRows * i + j] = cropBitmap;
                         map[mRows * i + j] = (mRows * i + j) % (mRows * mCols);
-                        
-                        
+
+
                     }
                     if (mRows * i + j != mRows * mCols)
                     {
                         images[mRows * i + j] = new Image();
                         images[mRows * i + j].Stretch = Stretch.Fill;
-                        images[mRows * i + j].Width = width;
-                        images[mRows * i + j].Height = height;
+                        images[mRows * i + j].Width = width - 2;
+                        images[mRows * i + j].Height = height - 2;
                         images[mRows * i + j].Source = objImg[map[mRows * i + j]];
                         images[mRows * i + j].Uid = $"{mRows * i + j}";
                     }
                 }
             }
-            map[mRows * (mRows-1) + mCols -1] = -1;
+            map[mRows * (mRows - 1) + mCols - 1] = -1;
         }
 
         private void DrawPuzzleBoard()
@@ -104,6 +142,7 @@ namespace puzzleABC
                 myline.Y1 = point1.Y;
                 myline.X2 = point2.X;
                 myline.Y2 = point2.Y;
+                myline.StrokeThickness = 2;
                 myline.Stroke = Brushes.DarkGray;
                 myCanvas.Children.Add(myline);
             }
@@ -117,6 +156,7 @@ namespace puzzleABC
                 myline.Y1 = point1.Y;
                 myline.X2 = point2.X;
                 myline.Y2 = point2.Y;
+                myline.StrokeThickness = 2;
                 myline.Stroke = Brushes.DarkGray;
                 myCanvas.Children.Add(myline);
             }
@@ -128,16 +168,16 @@ namespace puzzleABC
             {
                 for (int j = 0; j < mCols; j++)
                 {
-                    
+
                     if (!((i == mRows - 1) && (j == mCols - 1)))
                     {
                         var cropImage = new Image();
                         cropImage.Stretch = Stretch.Fill;
                         cropImage.Width = width;
                         cropImage.Height = height;
-                      //  cropImage.Tag = mRows * i + j;
+                        //  cropImage.Tag = mRows * i + j;
                         cropImage.Source = objImg[mRows * i + j];
-                        
+
                     }
                 }
             }
@@ -156,7 +196,7 @@ namespace puzzleABC
                 int cellX = i1 % mCols;
                 int cellY = i1 / mRows;
                 i2 = r.Next(0, 11111);
-                
+
                 i2 = i2 % 4;
                 Debug.WriteLine(i2);
                 switch (i2)
@@ -233,12 +273,12 @@ namespace puzzleABC
 
             }
 
-            for(int i =0; i< mRows; i++)
+            for (int i = 0; i < mRows; i++)
             {
                 for (int j = 0; j < mCols; j++)
                 {
                     if (mRows * i + j != -1)
-                    Debug.Write(map[mRows * i + j]);
+                        Debug.Write(map[mRows * i + j]);
                 }
                 Debug.WriteLine("");
             }
@@ -246,12 +286,12 @@ namespace puzzleABC
             for (int i = 0; i < mRows; i++)
             {
                 for (int j = 0; j < mCols; j++)
-                    if (map[mRows * i+j]!=-1)
+                    if (map[mRows * i + j] != -1)
                     {
-                       
+
                         myCanvas.Children.Add(images[map[mRows * i + j]]);
-                        Canvas.SetLeft(images[map[mRows * i + j]], startX + j * width);
-                        Canvas.SetTop(images[map[mRows * i + j]], startY + i * height);
+                        Canvas.SetLeft(images[map[mRows * i + j]], startX + j * width + 1);
+                        Canvas.SetTop(images[map[mRows * i + j]], startY + i * height + 1);
                         images[map[mRows * i + j]].MouseLeftButtonDown += beginDrag;
                         images[map[mRows * i + j]].PreviewMouseLeftButtonUp += endDrag;
                     }
@@ -259,8 +299,6 @@ namespace puzzleABC
 
         }
 
-        Tuple<int, int> lastCell;
-        bool gameOver = false;
 
         bool canMove(int x1, int y1, int x2, int y2)
         {
@@ -302,11 +340,6 @@ namespace puzzleABC
 
         }
 
-        bool isDragging = false;
-
-        Image _selectedCropImage = null;
-        Point _lastPosition;
-
         private void beginDrag(object sender, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(this);
@@ -322,6 +355,8 @@ namespace puzzleABC
         }
         private void Mouse_Move(object sender, MouseEventArgs e)
         {
+            //var position = e.GetPosition(this);
+            //if (position == iamge.edge)
             if (isDragging)
             {
                 var position = e.GetPosition(this);
@@ -410,7 +445,8 @@ namespace puzzleABC
                                     _selectedCropImage = image;
                                     break;
                                 }
-                            } catch(Exception r)
+                            }
+                            catch (Exception r)
                             {
                             }
                         }
@@ -427,7 +463,7 @@ namespace puzzleABC
 
                             try
                             {
-                                if (Int32.Parse(image.Uid) == map[mRows * (cellY) + cellX+1])
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY) + cellX + 1])
                                 {
                                     _selectedCropImage = image;
                                     break;
@@ -452,7 +488,7 @@ namespace puzzleABC
 
                             try
                             {
-                                if (Int32.Parse(image.Uid) == map[mRows * (cellY )+ cellX - 1])
+                                if (Int32.Parse(image.Uid) == map[mRows * (cellY) + cellX - 1])
                                 {
                                     _selectedCropImage = image;
                                     doMove(cellX, cellY, cellX - 1, cellY);
@@ -463,8 +499,8 @@ namespace puzzleABC
                             {
                             }
                         }
-                       
-                        
+
+
                     }
                     break;
             }
@@ -472,10 +508,10 @@ namespace puzzleABC
 
         void doMove(int nX, int nY, int oX, int oY)
         {
-        //    myCanvas.Children.Add(image);
+            //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
-            Canvas.SetLeft(_selectedCropImage, startX + nX * width);
-            Canvas.SetTop(_selectedCropImage, startY + nY * height);
+            Canvas.SetLeft(_selectedCropImage, startX + nX * width + 1);
+            Canvas.SetTop(_selectedCropImage, startY + nY * height + 1);
             if (nX == oX && nY == oY)
             {
                 return;

@@ -7,10 +7,32 @@
         mc:Ignorable="d"
         MouseMove="Mouse_Move"
         KeyDown="Window_KeyDown"
-        Title="MainWindow" Height="450" Width="800" Loaded="Window_Loaded">
-    <Canvas Name="myCanvas">
-        <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Canvas.Left="400" Canvas.Top="30">
-            <Image x:Name="previewImage"  />
-        </Border>
-    </Canvas>
+        Title="MainWindow" Height="600" Width="800" Loaded="Window_Loaded" ResizeMode="NoResize"
+        Name="mainWindow">
+    <Grid Background="DarkCyan">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{Binding MainWindowHeight}"/>
+            <ColumnDefinition ></ColumnDefinition>
+            
+        </Grid.ColumnDefinitions>
+        <Canvas Grid.Column="0" Name="myCanvas" Background="DarkCyan" Margin="10">
+            
+        </Canvas>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Image Grid.Row="0" Name="previewImage" Margin="20"/>
+            <StackPanel Grid.Row="1" Margin="0 10 10 0" HorizontalAlignment="Center"
+                        Width="150">
+                <Button>Save</Button>
+                <Button>Load</Button>
+                <Button>New game</Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+
 </Window>
