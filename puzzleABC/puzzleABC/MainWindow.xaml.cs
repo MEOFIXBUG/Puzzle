@@ -91,7 +91,7 @@ namespace puzzleABC
                 timer = new Timer();
                 timer.Interval = 1000;
                 timer.Elapsed += Timer_Elapsed;
-                timer.Start();
+                playButton.Content = "Play";
             }
         }
 
@@ -560,10 +560,10 @@ namespace puzzleABC
         #region Button Click
         private void newGameButton_Click(object sender, RoutedEventArgs e)
         {
-            timeLabel.Content = "03:00";
             timer.Stop();
             timer.Close();
             myCanvas.Children.Clear();
+            timeLabel.Content = "03:00";
             CreateNewGame();
         }
 
@@ -617,6 +617,22 @@ namespace puzzleABC
 
 
         }
+
         #endregion
+
+        private void playButton_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if (button.Content as string == "Pause")
+            {
+                button.Content = "Continue";
+                timer.Stop();
+            }
+            else
+            {
+                button.Content = "Pause";
+                timer.Start();
+            }
+        }
     }
 }

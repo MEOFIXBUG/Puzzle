@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         MouseMove="Mouse_Move"
         KeyDown="Window_KeyDown"
-        Title="MainWindow" Height="700" Width="1000" Loaded="Window_Loaded" ResizeMode="NoResize"
+        Title="Puzzle" Height="700" Width="1000" Loaded="Window_Loaded" ResizeMode="NoResize"
         Name="mainWindow">
     <Grid Background="#CFEAF5">
         <Grid.ColumnDefinitions>
@@ -23,9 +23,34 @@
 
         <!--Right side-->
         <Grid Grid.Column="1" Background="#0154A4" HorizontalAlignment="Stretch">
+            <Grid.Resources>
+                <Style TargetType="{x:Type Button}" x:Key="myButtonStyle">
+                    <Setter Property="Height" Value="30"/>
+                    <Setter Property="Margin" Value="0 10 0 0"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border Name="ButtonBorder" CornerRadius="10" BorderBrush="White" BorderThickness="2"
+                                        Background="#001D8F"  >
+                                    <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                          />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="ButtonBorder" Property="Background" Value="#010135" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+
+                </Style>
+            </Grid.Resources>
             <Grid.RowDefinitions>
                 <RowDefinition Height="300"/>
-                <RowDefinition Height="100"/>
+                <RowDefinition Height="200"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
 
@@ -35,7 +60,15 @@
                     BorderBrush="White">
                 <Image Name="previewImage" Stretch="Fill"/>
             </Border>
-            <StackPanel Grid.Row="1">
+
+            <!--Button-->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                
+                
+                <Button Name="playButton" Content="Play" Height="50" Width="150" BorderBrush="Red" BorderThickness="10"
+                        FontSize="20" FontWeight="Bold"
+                        Click="playButton_Click"
+                        Style="{StaticResource myButtonStyle}"/>
                 <Label Content="Time remaining" HorizontalContentAlignment="Center"
                        Foreground="White" FontSize="20" FontWeight="DemiBold"/>
                 <ProgressBar Name="timeProgressBar" Orientation="Horizontal" 
@@ -45,44 +78,19 @@
                              />
 
 
-                <Label Name="timeLabel"  Content="00:00" VerticalAlignment="Center" HorizontalAlignment="Center"
+                <Label Name="timeLabel"  Content="03:00" VerticalAlignment="Center" HorizontalAlignment="Center"
                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                        FontSize="17"
                        Foreground="#FFC20F" FontWeight="Bold"/>
 
             </StackPanel>
-            <StackPanel Grid.Row="2" Margin="0 10 10 0"  VerticalAlignment="Top"
+            <StackPanel Grid.Row="2" Margin="0 10 10 0"  VerticalAlignment="Center"
                         Width="150">
-                <StackPanel.Resources>
-                    <Style TargetType="{x:Type Button}" x:Key="myButtonStyle">
-                        <Setter Property="Margin" Value="0 10 0 0"/>
-                        <Setter Property="Foreground" Value="White"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="{x:Type Button}">
-                                    <Border Name="ButtonBorder" CornerRadius="10" BorderBrush="White" BorderThickness="2"
-                                           >
-                                        <ContentPresenter x:Name="ButtonContentPresenter" 
-                                                          VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                          />
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="ButtonBorder" Property="Background" Value="#010135" />
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        
-                    </Style>
-                </StackPanel.Resources>
 
                 <Button Name="newGameButton" Click="newGameButton_Click" Content="New game" Style="{StaticResource myButtonStyle}"/>
                 <Button Name="saveButton" Click="saveButton_Click" Content="Save" Style="{StaticResource myButtonStyle}"/>
                 <Button Name="loadButton" Click="loadButton_Click" Content="Load" Style="{StaticResource myButtonStyle}"/>
-                
+
 
 
             </StackPanel>
