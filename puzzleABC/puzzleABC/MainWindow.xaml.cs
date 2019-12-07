@@ -1,20 +1,16 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 
@@ -32,10 +28,10 @@ namespace puzzleABC
         }
         const int startX = 0;
         const int startY = 0;
-        int height = 120;
-        int width = 120;
-        const int mRows = 5;
-        const int mCols = 5;
+        int cellHeight;
+        int cellWidth;
+        const int mRows = 3;
+        const int mCols = 3;
         CroppedBitmap[] objImg;
         Image[] images;
         int[] map;
@@ -47,14 +43,18 @@ namespace puzzleABC
         Tuple<int, int> lastCell;
         bool gameOver = false;
 
+        Timer timer;
+        int _time = 180;
         string _previewImageSource;
         int _mainWindowHeight;
-        int _mainWindowWidth;
         public string PreviewImageSource { get => _previewImageSource; set { _previewImageSource = value; OnPropertyChanged("PreviewImageSource"); } }
 
-        public int MainWindowHeight { get => _mainWindowHeight; set { OnPropertyChanged(); _mainWindowHeight = value; } }
+        public int MainWindowHeight { get => (int)mainWindow.Height - (int)SystemParameters.CaptionHeight; set { OnPropertyChanged(); _mainWindowHeight = value; } }
 
-        public int MainWindowWidth { get => _mainWindowWidth; set { OnPropertyChanged(); _mainWindowWidth = value; } }
+
+        public int Time { get => _time; set { _time = value; OnPropertyChanged(); } }
+
+        public object Int { get; private set; }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -64,44 +64,74 @@ namespace puzzleABC
         public event PropertyChangedEventHandler PropertyChanged;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            MainWindowHeight = (int)mainWindow.Height - (int)SystemParameters.CaptionHeight;
+            CreateNewGame();
+        }
+
+        private void CreateNewGame()
+        {
             objImg = new CroppedBitmap[mRows * mCols];
             map = new int[mRows * mCols];
             images = new Image[mRows * mCols];
+            Time = 180;
             var screen = new OpenFileDialog();
 
             if (screen.ShowDialog() == true)
             {
                 PreviewImageSource = screen.FileName;
                 var source = new BitmapImage(
-                   new Uri(screen.FileName, UriKind.Absolute));
+                       new Uri(PreviewImageSource, UriKind.Absolute));
                 var image = new Image();
                 var screenWidth = SystemParameters.WorkArea.Width;
                 var screenHeight = SystemParameters.WorkArea.Height;
-                //previewImage.Width = 400;
-                //previewImage.Height = 400;
-                //previewImage.Source = source;
 
-                //Canvas.SetLeft(previewImage, 440);
-                //Canvas.SetTop(previewImage, 10);
                 CutImage(source);
-                //SetPiecesPosition();
                 DrawPuzzleBoard();
                 Shuffle();
-            }
 
+                timer = new Timer();
+                timer.Interval = 1000;
+                timer.Elapsed += Timer_Elapsed;
+                timer.Start();
+            }
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            Time--;
+            Dispatcher.Invoke(() => //dispatcher.main.sync{code}
+            {
+                if (Time <= 30)
+                {
+                    timeProgressBar.Foreground = Brushes.Red;
+                }
+                int min = Time / 60;
+                int second = Time % 60;
+                if (second > 9)
+                {
+                    timeLabel.Content = $"0{Time / 60}:{second}";
+                }
+                else
+                {
+                    timeLabel.Content = $"0{Time / 60}:0{second}";
+                }
+            });//this is closure in swift
+            if (Time == 0)
+            {
+                //xử lí hết giờ ở đây.
+                timer.Stop();
+            }
         }
 
         private void CutImage(BitmapImage source)
         {
             var minPixelEdge = source.PixelWidth < source.PixelHeight ? (int)source.PixelWidth : (int)source.PixelHeight;
-            var minEdge = (int)MainWindowHeight - (int)SystemParameters.CaptionHeight - 10;
+            var minEdge = 700 - 80;
             var firstCroppedBitmap = new CroppedBitmap(source, new Int32Rect(0, 0, minPixelEdge, minPixelEdge));
             previewImage.Source = firstCroppedBitmap;
             var pixelHeight = minPixelEdge / mRows;
             var pixelWidth = minPixelEdge / mCols;
-            height = minEdge / mRows;
-            width = minEdge / mCols;
+            cellHeight = minEdge / mRows;
+            cellWidth = minEdge / mCols;
 
             for (int i = 0; i < mRows; i++)
             {
@@ -121,8 +151,8 @@ namespace puzzleABC
                     {
                         images[mRows * i + j] = new Image();
                         images[mRows * i + j].Stretch = Stretch.Fill;
-                        images[mRows * i + j].Width = width - 2;
-                        images[mRows * i + j].Height = height - 2;
+                        images[mRows * i + j].Width = cellWidth - 2;
+                        images[mRows * i + j].Height = cellHeight - 2;
                         images[mRows * i + j].Source = objImg[map[mRows * i + j]];
                         images[mRows * i + j].Uid = $"{mRows * i + j}";
                     }
@@ -135,8 +165,8 @@ namespace puzzleABC
         {
             for (int j = 0; j <= mCols; j++)
             {
-                Point point1 = new Point(startX + j * width, startY);
-                Point point2 = new Point(startX + j * width, startY + mRows * height);
+                Point point1 = new Point(startX + j * cellWidth, startY);
+                Point point2 = new Point(startX + j * cellWidth, startY + mRows * cellHeight);
                 Line myline = new Line();
                 myline.X1 = point1.X;
                 myline.Y1 = point1.Y;
@@ -149,8 +179,8 @@ namespace puzzleABC
 
             for (int i = 0; i <= mRows; i++)
             {
-                Point point1 = new Point(startX, startY + i * height);
-                Point point2 = new Point(startX + mCols * width, startY + i * height);
+                Point point1 = new Point(startX, startY + i * cellHeight);
+                Point point2 = new Point(startX + mCols * cellWidth, startY + i * cellHeight);
                 Line myline = new Line();
                 myline.X1 = point1.X;
                 myline.Y1 = point1.Y;
@@ -173,8 +203,8 @@ namespace puzzleABC
                     {
                         var cropImage = new Image();
                         cropImage.Stretch = Stretch.Fill;
-                        cropImage.Width = width;
-                        cropImage.Height = height;
+                        cropImage.Width = cellWidth;
+                        cropImage.Height = cellHeight;
                         //  cropImage.Tag = mRows * i + j;
                         cropImage.Source = objImg[mRows * i + j];
 
@@ -290,8 +320,8 @@ namespace puzzleABC
                     {
 
                         myCanvas.Children.Add(images[map[mRows * i + j]]);
-                        Canvas.SetLeft(images[map[mRows * i + j]], startX + j * width + 1);
-                        Canvas.SetTop(images[map[mRows * i + j]], startY + i * height + 1);
+                        Canvas.SetLeft(images[map[mRows * i + j]], startX + j * cellWidth + 1);
+                        Canvas.SetTop(images[map[mRows * i + j]], startY + i * cellHeight + 1);
                         images[map[mRows * i + j]].MouseLeftButtonDown += beginDrag;
                         images[map[mRows * i + j]].PreviewMouseLeftButtonUp += endDrag;
                     }
@@ -325,8 +355,8 @@ namespace puzzleABC
         private void endDrag(object sender, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(this);
-            var cellX = (int)(position.X - startX) / width;
-            var cellY = (int)(position.Y - startY) / height;
+            var cellX = (int)(position.X - startX) / cellWidth;
+            var cellY = (int)(position.Y - startY) / cellHeight;
             isDragging = false;
             if (canMove(cellX, cellY, lastCell.Item1, lastCell.Item2))
             {
@@ -343,8 +373,8 @@ namespace puzzleABC
         private void beginDrag(object sender, MouseButtonEventArgs e)
         {
             var position = e.GetPosition(this);
-            var cellX = (int)(position.X - startX) / width;
-            var cellY = (int)(position.Y - startY) / height;
+            var cellX = (int)(position.X - startX) / cellWidth;
+            var cellY = (int)(position.Y - startY) / cellHeight;
             if (cellX < mCols && cellY < mRows)
             {
                 lastCell = new Tuple<int, int>(cellX, cellY);
@@ -363,11 +393,11 @@ namespace puzzleABC
                 var dx = position.X - _lastPosition.X;
                 var dy = position.Y - _lastPosition.Y;
 
-                if (position.X < startX - 20 || position.Y < startY - 10 || position.X > startX + (mRows * height) + 2 * height || position.Y > startY + (mCols * width) + 2 * width)
+                if (position.X < startX - 20 || position.Y < startY - 10 || position.X > startX + (mRows * cellHeight) + 2 * cellHeight || position.Y > startY + (mCols * cellWidth) + 2 * cellWidth)
                 {
                     isDragging = false;
-                    Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * width);
-                    Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * height);
+                    Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * cellWidth);
+                    Canvas.SetTop(_selectedCropImage, startY + lastCell.Item2 * cellHeight);
                 }
                 else
                 {
@@ -401,8 +431,8 @@ namespace puzzleABC
             var newImage = new Image();
 
             oldImage.Stretch = Stretch.Fill;
-            oldImage.Width = width;
-            oldImage.Height = height;
+            oldImage.Width = cellWidth;
+            oldImage.Height = cellHeight;
             switch (e.Key)
             {
                 case Key.Down:
@@ -510,8 +540,8 @@ namespace puzzleABC
         {
             //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
-            Canvas.SetLeft(_selectedCropImage, startX + nX * width + 1);
-            Canvas.SetTop(_selectedCropImage, startY + nY * height + 1);
+            Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
+            Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
             if (nX == oX && nY == oY)
             {
                 return;
@@ -526,5 +556,67 @@ namespace puzzleABC
                 MessageBox.Show("Win");
             }
         }
+
+        #region Button Click
+        private void newGameButton_Click(object sender, RoutedEventArgs e)
+        {
+            timeLabel.Content = "03:00";
+            timer.Stop();
+            timer.Close();
+            myCanvas.Children.Clear();
+            CreateNewGame();
+        }
+
+        private void saveButton_Click(object sender, RoutedEventArgs e)
+        {
+            timer.Stop();
+            //save map arr, image source. time. notify if image source not available
+            var writer = new StreamWriter("save.txt");
+            writer.WriteLine(Time.ToString());
+            for (int i = 0; i < map.Length; i++)
+            {
+                writer.Write(map[i]);
+                writer.Write(" ");
+            }
+            writer.WriteLine("");
+
+            writer.Write(PreviewImageSource);
+            writer.Close();
+            MessageBox.Show("Game save");
+
+        }
+
+        private void loadButton_Click(object sender, RoutedEventArgs e)
+        {
+            var screen = new OpenFileDialog();
+            if (screen.ShowDialog() == true)
+            {
+                var fileName = screen.FileName;
+                var reader = new StreamReader("save.txt");
+
+                var line = reader.ReadLine();
+                int res;
+                Int32.TryParse(line, out res);
+                Time = res;
+
+                line = reader.ReadLine();
+                var tokens = line.Split(new string[] { " " }, StringSplitOptions.None);
+
+                for (int i = 0; i < map.Length; i++)
+                {
+                    Int32.TryParse(tokens[i], out res);
+                    map[i] = res;
+                }
+
+                PreviewImageSource = reader.ReadLine();
+
+                reader.Close();
+                MessageBox.Show("Game is Loaded!");
+
+            }
+
+
+        }
+        #endregion
     }
 }
