@@ -1,8 +1,11 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 
 namespace puzzleABC
 {
@@ -74,10 +77,23 @@ namespace puzzleABC
                                 writer.Write(map[i]);
                                 writer.Write(" ");
                             }
-                            writer.WriteLine("");
-
-                            writer.Write(PreviewImageSource);
                             writer.Close();
+
+                            Bitmap bmpOut = null;
+
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)this.previewImage.Source));
+                                encoder.Save(ms);
+
+                                using (Bitmap bmp = new Bitmap(ms))
+                                {
+                                    bmpOut = new Bitmap(bmp);
+                                }
+                            }
+
+                            bmpOut.Save("previewImage.jpg", ImageFormat.Jpeg);
                             MessageBox.Show("Game save");
                             timer.Start();
                         },
@@ -96,40 +112,40 @@ namespace puzzleABC
                     (new MyCommand(
                         () =>
                         {
-                            var screen = new OpenFileDialog();
-                            if (screen.ShowDialog() == true)
+                            var reader = new StreamReader("save.txt");
+
+                            var line = reader.ReadLine();
+                            int res;
+                            Int32.TryParse(line, out res);
+                            Time = res;
+
+                            line = reader.ReadLine();
+                            var tokens = line.Split(new string[] { " " }, StringSplitOptions.None);
+
+                            for (int i = 0; i < map.Length; i++)
                             {
-                                var fileName = screen.FileName;
-                                var reader = new StreamReader("save.txt");
-
-                                var line = reader.ReadLine();
-                                int res;
-                                Int32.TryParse(line, out res);
-                                Time = res;
-
-                                line = reader.ReadLine();
-                                var tokens = line.Split(new string[] { " " }, StringSplitOptions.None);
-
-                                for (int i = 0; i < map.Length; i++)
-                                {
-                                    Int32.TryParse(tokens[i], out res);
-                                    map[i] = res;
-                                }
-
-                                PreviewImageSource = reader.ReadLine();
-
-                                reader.Close();
-                                MessageBox.Show("Game is Loaded!");
-
+                                Int32.TryParse(tokens[i], out res);
+                                map[i] = res;
                             }
+
+                            reader.Close();
+
+                            string path = AppDomain.CurrentDomain.BaseDirectory + "previewImage.jpg";
+                            BitmapImage source = new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute));
+                            previewImage.Source = source;
+
+                            myCanvas.Children.Clear();
+                            CutImage(source);
+                            DrawPuzzleBoard();
+                            Shuffle();
+
+                            MessageBox.Show("Game is Loaded!");
+                      
                         },
-                        () =>
-                        {
-                            return true;
-                        }
+                        () => { return true; }
                     ));
             }
-        }
+}
     }
 }
 

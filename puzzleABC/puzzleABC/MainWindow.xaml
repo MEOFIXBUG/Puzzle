@@ -91,8 +91,6 @@
                 <Button Command="{Binding SaveButtonClickCommand}" Name="saveButton" Content="Save" Style="{StaticResource myButtonStyle}"/>
                 <Button Command="{Binding LoadButtonClickCommand}" Name="loadButton" Content="Load" Style="{StaticResource myButtonStyle}"/>
 
-
-
             </StackPanel>
         </Grid>
     </Grid>

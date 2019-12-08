@@ -80,9 +80,7 @@ namespace puzzleABC
                 PreviewImageSource = screen.FileName;
                 var source = new BitmapImage(
                        new Uri(PreviewImageSource, UriKind.Absolute));
-                var image = new Image();
-                var screenWidth = SystemParameters.WorkArea.Width;
-                var screenHeight = SystemParameters.WorkArea.Height;
+             
 
                 CutImage(source);
                 DrawPuzzleBoard();
