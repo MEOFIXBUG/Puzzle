@@ -85,6 +85,24 @@ namespace puzzleABC
             {
                 PreviewImageSource = screen.FileName;
                 initTable();
+                //var source = new BitmapImage(
+                //       new Uri(PreviewImageSource, UriKind.Absolute));
+
+                //CutImage(source);
+                //DrawPuzzleBoard();
+                //Shuffle();
+                //SetPieces();
+                //this.KeyDown += Window_KeyDown;
+                //var totalImage = myCanvas.Children.OfType<Image>().ToList();
+                //foreach (var image in totalImage)
+                //{
+                //    image.MouseLeftButtonDown += beginDrag;
+                //    image.MouseLeftButtonUp += endDrag;
+                //}
+                //timer = new Timer();
+                //timer.Interval = 1000;
+                //timer.Elapsed += Timer_Elapsed;
+                //playButton.Content = "Play";
             }
         }
 
@@ -105,7 +123,7 @@ namespace puzzleABC
             {
 
             }
-          //  initSnap();
+          //initSnap();
         }
         private void initSnap()
         {
@@ -392,15 +410,31 @@ namespace puzzleABC
         bool canMove(int x1, int y1, int x2, int y2)
         {
             if (x1 < 0 || x1 >= mCols) return false;
-            if (x2 < 0 || x2 >= mCols) return false;
             if (y1 < 0 || y1 >= mRows) return false;
+            if (x2 < 0 || x2 >= mCols) return false;
             if (y2 < 0 || y2 >= mRows) return false;
+//
 
-            if (map[mRows * y1 + x1] == -1 && ((x1 == x2 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && y1 == y2)))
+//            if (map[mRows * y1 + x1] == -1 && ((x1 == x2 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && y1 == y2)))
+//
+            if (map[mRows * y1 + x1] != -1) return false;
+            else
             {
-                return true;
+                if (x1 - x2 == 0 && (y1 - y2 == 1 || y1 - y2 == -1))
+                {
+                    return true;
+                }
+                if (y1 - y2 == 0 && (x1 - x2 == 1 || x1 - x2 == -1))
+                {
+                    return true;
+                }
             }
             return false;
+            //if (map[mRows * y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
+            //{
+            //    return true;
+            //}
+            //return false;
         }
         bool checkWin()
         {
@@ -413,7 +447,7 @@ namespace puzzleABC
         }
         private void endDrag(object sender, MouseButtonEventArgs e)
         {
-            if(!gameOver)
+            if (!gameOver)
             {
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
@@ -609,35 +643,48 @@ namespace puzzleABC
                         break;
                 }
             }
-            
+
         }
 
         void doMove(int nX, int nY, int oX, int oY)
         {
+
+            //  swap
+            var temp = map[mRows * nY + nX];
+            map[mRows * nY + nX] = map[mRows * oY + oX];
+            map[mRows * oY + oX] = temp;
+            Debug.WriteLine("map!");
+            foreach (var item in map)
+            {
+                Debug.WriteLine(item);
+            }
             //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
             Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
             Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
-            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
-            if (nX == oX && nY == oY)
-            {
-                return;
-            }
-            //  myCanvas.Children.Add(image);
-            if (map[mRows* nY + nX] == -1)
-            {
-                map[mRows * nY + nX] = map[mRows * oY + oX];
-                map[mRows * oY + oX] = -1;
-            }
+//
+//            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
+//            if (nX == oX && nY == oY)
+//            {
+//                return;
+//            }
+//            //  myCanvas.Children.Add(image);
+//            if (map[mRows* nY + nX] == -1)
+//            {
+//                map[mRows * nY + nX] = map[mRows * oY + oX];
+//                map[mRows * oY + oX] = -1;
+//            }
 
 
+
+//
 
             if (checkWin() == true)
             {
                 MessageBox.Show("Win");
                 this.KeyDown -= Window_KeyDown;
                 var totalImage = myCanvas.Children.OfType<Image>().ToList();
-                foreach(var image in totalImage)
+                foreach (var image in totalImage)
                 {
                     image.MouseLeftButtonDown -= beginDrag;
                     image.MouseLeftButtonUp -= endDrag;
@@ -645,9 +692,10 @@ namespace puzzleABC
                 isDragging = false;
                 gameOver = true;
             }
+
         }
 
-        
+
     }
 
 }
