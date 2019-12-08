@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:puzzleABC"
         mc:Ignorable="d"
-        MouseMove="Mouse_Move"
-        KeyDown="Window_KeyDown"
+        
+     
         Title="Puzzle" Height="700" Width="1000" Loaded="Window_Loaded" ResizeMode="NoResize"
         Name="mainWindow">
     <Window.Resources>
@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <!--main canvas to cantain croppedimage-->
-        <Canvas Grid.Column="0" Name="myCanvas" Margin="20">
+        <Canvas Grid.Column="0" Name="myCanvas" Margin="20" MouseMove="Mouse_Move">
 
         </Canvas>
 

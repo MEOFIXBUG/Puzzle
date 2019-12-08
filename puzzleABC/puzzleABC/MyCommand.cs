@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -27,11 +28,13 @@ namespace puzzleABC
                             {
                                 playButton.Content = "Continue";
                                 timer.Stop();
+                                gameOver = true;
                             }
                             else
                             {
                                 playButton.Content = "Pause";
                                 timer.Start();
+                                gameOver = false;
                             };
                         },
                         () =>
@@ -96,7 +99,6 @@ namespace puzzleABC
                                 bmpOut.Save("previewImage.jpg");
                             }
 
-
                             MessageBox.Show("Game save");
                             timer.Start();
                         },
@@ -124,11 +126,11 @@ namespace puzzleABC
 
                             line = reader.ReadLine();
                             var tokens = line.Split(new string[] { " " }, StringSplitOptions.None);
-
+                            int[] temp = new int[mRows * mCols];
                             for (int i = 0; i < map.Length; i++)
                             {
                                 Int32.TryParse(tokens[i], out res);
-                                map[i] = res;
+                                temp[i] = res;
                             }
 
                             reader.Close();
@@ -151,8 +153,8 @@ namespace puzzleABC
                             playButton.Content = "Continue";
                             CutImage(source);
                             DrawPuzzleBoard();
-                            Shuffle();
-
+                            map = temp;
+                            SetPieces();
                             MessageBox.Show("Game is Loaded!");
 
                         },
