@@ -74,7 +74,9 @@ namespace puzzleABC
             images = new Image[mRows * mCols];
             Time = 180;
             var screen = new OpenFileDialog();
-
+            screen.Filter = "All supported graphics|*.jpg;*.jpeg;*.png|" +
+       "JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|" +
+       "Portable Network Graphic (*.png)|*.png";
             if (screen.ShowDialog() == true)
             {
                 PreviewImageSource = screen.FileName;
