@@ -421,7 +421,6 @@ namespace puzzleABC
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-
             int indexNull = getIndexNullImage();
             int cellX = indexNull % mCols;
             int cellY = indexNull / mRows;

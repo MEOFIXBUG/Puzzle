@@ -9,6 +9,9 @@
         KeyDown="Window_KeyDown"
         Title="Puzzle" Height="700" Width="1000" Loaded="Window_Loaded" ResizeMode="NoResize"
         Name="mainWindow">
+    <Window.Resources>
+        <local:TimeIntToString x:Key="TimeIntToStringConverter"/>
+    </Window.Resources>
     <Grid Background="#CFEAF5">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="{Binding MainWindowHeight}"/>
@@ -78,7 +81,7 @@
                              />
 
 
-                <Label Name="timeLabel"  Content="03:00" VerticalAlignment="Center" HorizontalAlignment="Center"
+                <Label Name="timeLabel"  Content="{Binding Time , Converter={StaticResource TimeIntToStringConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center"
                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                        FontSize="17"
                        Foreground="#FFC20F" FontWeight="Bold"/>

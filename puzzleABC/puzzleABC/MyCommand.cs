@@ -90,10 +90,13 @@ namespace puzzleABC
                                 using (Bitmap bmp = new Bitmap(ms))
                                 {
                                     bmpOut = new Bitmap(bmp);
+
                                 }
+
+                                bmpOut.Save("previewImage.jpg");
                             }
 
-                            bmpOut.Save("previewImage.jpg", ImageFormat.Jpeg);
+
                             MessageBox.Show("Game save");
                             timer.Start();
                         },
@@ -131,21 +134,32 @@ namespace puzzleABC
                             reader.Close();
 
                             string path = AppDomain.CurrentDomain.BaseDirectory + "previewImage.jpg";
-                            BitmapImage source = new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute));
+                            PreviewImageSource = path;
+
+                            BitmapImage source = new BitmapImage();
+                            source.BeginInit();
+                            source.CacheOption = BitmapCacheOption.OnLoad;
+                            source.UriSource = new Uri(path);
+                            source.EndInit();
                             previewImage.Source = source;
 
                             myCanvas.Children.Clear();
+                            timer?.Close();
+                            timer = new System.Timers.Timer();
+                            timer.Interval = 1000;
+                            timer.Elapsed += Timer_Elapsed;
+                            playButton.Content = "Continue";
                             CutImage(source);
                             DrawPuzzleBoard();
                             Shuffle();
 
                             MessageBox.Show("Game is Loaded!");
-                      
+
                         },
                         () => { return true; }
                     ));
             }
-}
+        }
     }
 }
 
