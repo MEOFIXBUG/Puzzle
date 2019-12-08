@@ -67,7 +67,7 @@
                 
                 <Button Name="playButton" Content="Play" Height="50" Width="150" BorderBrush="Red" BorderThickness="10"
                         FontSize="20" FontWeight="Bold"
-                        Click="playButton_Click"
+                        Command="{Binding PlayButtonClickCommand}"
                         Style="{StaticResource myButtonStyle}"/>
                 <Label Content="Time remaining" HorizontalContentAlignment="Center"
                        Foreground="White" FontSize="20" FontWeight="DemiBold"/>
@@ -87,9 +87,9 @@
             <StackPanel Grid.Row="2" Margin="0 10 10 0"  VerticalAlignment="Center"
                         Width="150">
 
-                <Button Name="newGameButton" Click="newGameButton_Click" Content="New game" Style="{StaticResource myButtonStyle}"/>
-                <Button Name="saveButton" Click="saveButton_Click" Content="Save" Style="{StaticResource myButtonStyle}"/>
-                <Button Name="loadButton" Click="loadButton_Click" Content="Load" Style="{StaticResource myButtonStyle}"/>
+                <Button Command="{Binding NewGameButtonClickCommand}" Name="newGameButton" Content="New game" Style="{StaticResource myButtonStyle}"/>
+                <Button Command="{Binding SaveButtonClickCommand}" Name="saveButton" Content="Save" Style="{StaticResource myButtonStyle}"/>
+                <Button Command="{Binding LoadButtonClickCommand}" Name="loadButton" Content="Load" Style="{StaticResource myButtonStyle}"/>
 
 
 
