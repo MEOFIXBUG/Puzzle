@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Timers;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -28,12 +29,20 @@ namespace puzzleABC
                             {
                                 playButton.Content = "Continue";
                                 timer.Stop();
+                                try
+                                {
+                                    destroySnap();
+                                } catch(Exception er)
+                                {
+
+                                }
                                 gameOver = true;
                             }
                             else
                             {
                                 playButton.Content = "Pause";
                                 timer.Start();
+                                initSnap();
                                 gameOver = false;
                             };
                         },
@@ -133,16 +142,26 @@ namespace puzzleABC
                             }
 
                             reader.Close();
-
+                            playButton.Content = "Play";
+                            timer.Stop();
+                          //  destroySnap();
                             string path = AppDomain.CurrentDomain.BaseDirectory + "previewImage.jpg";
                             BitmapImage source = new BitmapImage(new Uri(path, UriKind.RelativeOrAbsolute));
                             previewImage.Source = source;
-
+                            PreviewImageSource = path;
                             myCanvas.Children.Clear();
                             CutImage(source);
                             DrawPuzzleBoard();
                             map = temp;
                             SetPieces();
+                            try
+                            {
+                                destroySnap();
+                            } catch(Exception er)
+                            {
+
+                            }
+                            //initSnap();
                             MessageBox.Show("Game is Loaded!");
                       
                         },

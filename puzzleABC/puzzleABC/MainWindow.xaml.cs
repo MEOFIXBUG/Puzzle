@@ -37,7 +37,7 @@ namespace puzzleABC
         int[] map;
 
         bool isDragging = false;
-
+        bool isDrop = true;
         Image _selectedCropImage = null;
         Point _lastPosition;
         Tuple<int, int> lastCell;
@@ -64,6 +64,10 @@ namespace puzzleABC
         public event PropertyChangedEventHandler PropertyChanged;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            timer = new Timer();
+            timer.Interval = 1000;
+            timer.Elapsed += Timer_Elapsed;
+            playButton.Content = "Play";
             CreateNewGame();
         }
 
@@ -80,29 +84,49 @@ namespace puzzleABC
             if (screen.ShowDialog() == true)
             {
                 PreviewImageSource = screen.FileName;
-                var source = new BitmapImage(
-                       new Uri(PreviewImageSource, UriKind.Absolute));
-
-                CutImage(source);
-                DrawPuzzleBoard();
-                Shuffle();
-                SetPieces();
-                this.KeyDown += Window_KeyDown;
-                var totalImage = myCanvas.Children.OfType<Image>().ToList();
-                foreach (var image in totalImage)
-                {
-                    image.MouseLeftButtonDown += beginDrag;
-                    image.MouseLeftButtonUp += endDrag;
-                }
-                timer = new Timer();
-                timer.Interval = 1000;
-                timer.Elapsed += Timer_Elapsed;
-                playButton.Content = "Play";
-
-                
+                initTable();
             }
         }
 
+        private void initTable()
+        {
+            playButton.Content = "Play";
+            var source = new BitmapImage(
+                   new Uri(PreviewImageSource, UriKind.Absolute));
+            CutImage(source);
+            DrawPuzzleBoard();
+            Shuffle();
+            SetPieces();
+            try
+            {
+                destroySnap();
+            }
+            catch (Exception er)
+            {
+
+            }
+          //  initSnap();
+        }
+        private void initSnap()
+        {
+            this.KeyDown += Window_KeyDown;
+            var totalImage = myCanvas.Children.OfType<Image>().ToList();
+            foreach (var image in totalImage)
+            {
+                image.MouseLeftButtonDown += beginDrag;
+                image.MouseLeftButtonUp += endDrag;
+            }
+        }
+        private void destroySnap()
+        {
+            this.KeyDown -= Window_KeyDown;
+            var totalImage = myCanvas.Children.OfType<Image>().ToList();
+            foreach (var image in totalImage)
+            {
+                image.MouseLeftButtonDown -= beginDrag;
+                image.MouseLeftButtonUp -= endDrag;
+            }
+        }
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             Time--;
@@ -111,6 +135,9 @@ namespace puzzleABC
                 if (Time <= 30)
                 {
                     timeProgressBar.Foreground = Brushes.Red;
+                } else
+                {
+                    timeProgressBar.Foreground = Brushes.Green;
                 }
                 int min = Time / 60;
                 int second = Time % 60;
@@ -125,8 +152,25 @@ namespace puzzleABC
             });//this is closure in swift
             if (Time == 0)
             {
+
                 //xử lí hết giờ ở đây.
                 timer.Stop();
+                MessageBox.Show("Thua rồi !!!");
+                gameOver = true;
+                isDragging = false;
+                PreviewImageSource = null;
+                Dispatcher.Invoke(()=>{
+                    myCanvas.Children.Clear();
+                    playButton.Content = "Play";
+                    this.KeyDown -= Window_KeyDown;
+                    var totalImage = myCanvas.Children.OfType<Image>().ToList();
+                    foreach (var image in totalImage)
+                    {
+                        image.MouseLeftButtonDown -= beginDrag;
+                        image.MouseLeftButtonUp -= endDrag;
+                    }
+
+                });
             }
         }
 
@@ -352,7 +396,7 @@ namespace puzzleABC
             if (y1 < 0 || y1 >= mRows) return false;
             if (y2 < 0 || y2 >= mRows) return false;
 
-            if (map[mRows * y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
+            if (map[mRows * y1 + x1] == -1 && ((x1 == x2 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && y1 == y2)))
             {
                 return true;
             }
@@ -381,12 +425,15 @@ namespace puzzleABC
                 }
                 if (canMove(cellX, cellY, lastCell.Item1, lastCell.Item2))
                 {
+                    Debug.WriteLine("true");
                     doMove(cellX, cellY, lastCell.Item1, lastCell.Item2);
                 }
                 else
                 {
+                    Debug.WriteLine("false");
                     doMove(lastCell.Item1, lastCell.Item2, lastCell.Item1, lastCell.Item2);
                 }
+               
             }
 
         }
@@ -401,6 +448,7 @@ namespace puzzleABC
                 if (cellX < mCols && cellY < mRows)
                 {
                     lastCell = new Tuple<int, int>(cellX, cellY);
+                    Debug.WriteLine($"Update: {cellX} - {cellY}");
                 }
                 _selectedCropImage = sender as Image;
                 _lastPosition = e.GetPosition(this);
@@ -418,7 +466,7 @@ namespace puzzleABC
                 var dx = position.X - _lastPosition.X;
                 var dy = position.Y - _lastPosition.Y;
 
-                if (position.X < startX - 20 || position.Y < startY - 10 || position.X > startX + (mRows * cellHeight) + 2 * cellHeight || position.Y > startY + (mCols * cellWidth) + 2 * cellWidth)
+                if (position.X < startX - 20 || position.Y < startY - 10 || position.X > startX + (mCols * cellWidth) + 2 * cellWidth || position.Y > startY + (mRows * cellHeight) + 2 * cellHeight)
                 {
                     isDragging = false;
                     Canvas.SetLeft(_selectedCropImage, startX + lastCell.Item1 * cellWidth);
@@ -570,13 +618,18 @@ namespace puzzleABC
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
             Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
             Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
+            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
             if (nX == oX && nY == oY)
             {
                 return;
             }
             //  myCanvas.Children.Add(image);
-            map[mRows * nY + nX] = map[mRows * oY + oX];
-            map[mRows * oY + oX] = -1;
+            if (map[mRows* nY + nX] == -1)
+            {
+                map[mRows * nY + nX] = map[mRows * oY + oX];
+                map[mRows * oY + oX] = -1;
+            }
+
 
 
             if (checkWin() == true)
