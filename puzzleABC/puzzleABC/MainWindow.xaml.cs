@@ -85,24 +85,6 @@ namespace puzzleABC
             {
                 PreviewImageSource = screen.FileName;
                 initTable();
-                //var source = new BitmapImage(
-                //       new Uri(PreviewImageSource, UriKind.Absolute));
-
-                //CutImage(source);
-                //DrawPuzzleBoard();
-                //Shuffle();
-                //SetPieces();
-                //this.KeyDown += Window_KeyDown;
-                //var totalImage = myCanvas.Children.OfType<Image>().ToList();
-                //foreach (var image in totalImage)
-                //{
-                //    image.MouseLeftButtonDown += beginDrag;
-                //    image.MouseLeftButtonUp += endDrag;
-                //}
-                //timer = new Timer();
-                //timer.Interval = 1000;
-                //timer.Elapsed += Timer_Elapsed;
-                //playButton.Content = "Play";
             }
         }
 
@@ -123,7 +105,7 @@ namespace puzzleABC
             {
 
             }
-          //initSnap();
+            //  initSnap();
         }
         private void initSnap()
         {
@@ -153,7 +135,8 @@ namespace puzzleABC
                 if (Time <= 30)
                 {
                     timeProgressBar.Foreground = Brushes.Red;
-                } else
+                }
+                else
                 {
                     timeProgressBar.Foreground = Brushes.Green;
                 }
@@ -177,7 +160,8 @@ namespace puzzleABC
                 gameOver = true;
                 isDragging = false;
                 PreviewImageSource = null;
-                Dispatcher.Invoke(()=>{
+                Dispatcher.Invoke(() =>
+                {
                     myCanvas.Children.Clear();
                     playButton.Content = "Play";
                     this.KeyDown -= Window_KeyDown;
@@ -413,28 +397,12 @@ namespace puzzleABC
             if (y1 < 0 || y1 >= mRows) return false;
             if (x2 < 0 || x2 >= mCols) return false;
             if (y2 < 0 || y2 >= mRows) return false;
-//
-
-//            if (map[mRows * y1 + x1] == -1 && ((x1 == x2 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && y1 == y2)))
-//
             if (map[mRows * y1 + x1] != -1) return false;
-            else
+            if (map[mRows * y1 + x1] == -1 && ((x1 == x2 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && y1 == y2)))
             {
-                if (x1 - x2 == 0 && (y1 - y2 == 1 || y1 - y2 == -1))
-                {
-                    return true;
-                }
-                if (y1 - y2 == 0 && (x1 - x2 == 1 || x1 - x2 == -1))
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
-            //if (map[mRows * y1 + x1] == -1 && ((Math.Abs(x1 - x2) == 0 && Math.Abs(y1 - y2) == 1) ^ (Math.Abs(x1 - x2) == 1 && Math.Abs(y1 - y2) == 0)))
-            //{
-            //    return true;
-            //}
-            //return false;
         }
         bool checkWin()
         {
@@ -467,7 +435,7 @@ namespace puzzleABC
                     Debug.WriteLine("false");
                     doMove(lastCell.Item1, lastCell.Item2, lastCell.Item1, lastCell.Item2);
                 }
-               
+
             }
 
         }
@@ -479,16 +447,91 @@ namespace puzzleABC
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
                 var cellY = (int)(position.Y - startY) / cellHeight;
-                if (cellX < mCols && cellY < mRows)
+                if (cellX < mCols && cellX >= 0 && cellY < mRows  && cellY >= 0)
                 {
                     lastCell = new Tuple<int, int>(cellX, cellY);
                     Debug.WriteLine($"Update: {cellX} - {cellY}");
                 }
+                else
+                {
+                    if(cellX < 0)
+                    {
+                        if(cellY < mRows && cellY >= 0)
+                        {
+                            lastCell = new Tuple<int, int>(0, cellY);
+                        }
+                        else
+                        {
+                            if(cellY >= mRows)
+                            {
+                                lastCell = new Tuple<int, int>(0, mRows-1);
+                            }
+                            else
+                            {
+                                lastCell = new Tuple<int, int>(0, 0);
+                            }
+                        }
+                    }
+                    if (cellX >= mCols)
+                    {
+                        if (cellY < mRows && cellY >= 0)
+                        {
+                            lastCell = new Tuple<int, int>(mCols-1, cellY);
+                        }
+                        else
+                        {
+                            if (cellY >= mRows)
+                            {
+                                lastCell = new Tuple<int, int>(mCols - 1, mRows - 1);
+                            }
+                            else
+                            {
+                                lastCell = new Tuple<int, int>(mCols - 1, 0);
+                            }
+                        }
+                    }
+                    if (cellY < 0)
+                    {
+                        if (cellX < mCols && cellX >= 0)
+                        {
+                            lastCell = new Tuple<int, int>(cellX, 0);
+                        }
+                        else
+                        {
+                            if (cellX >= mCols)
+                            {
+                                lastCell = new Tuple<int, int>(mCols-1, 0);
+                            }
+                            else
+                            {
+                                lastCell = new Tuple<int, int>(0, 0);
+                            }
+                        }
+                    }
+                    if (cellY < 0)
+                    {
+                        if (cellX < mCols && cellX >= 0)
+                        {
+                            lastCell = new Tuple<int, int>(cellX, mRows-1);
+                        }
+                        else
+                        {
+                            if (cellX >= mCols)
+                            {
+                                lastCell = new Tuple<int, int>(mCols - 1, mRows - 1);
+                            }
+                            else
+                            {
+                                lastCell = new Tuple<int, int>(0, mRows - 1);
+                            }
+                        }
+                    }
+                }
                 _selectedCropImage = sender as Image;
                 _lastPosition = e.GetPosition(this);
                 isDragging = true;
-            }
 
+            }
         }
         private void Mouse_Move(object sender, MouseEventArgs e)
         {
@@ -648,37 +691,17 @@ namespace puzzleABC
 
         void doMove(int nX, int nY, int oX, int oY)
         {
-
-            //  swap
-            var temp = map[mRows * nY + nX];
-            map[mRows * nY + nX] = map[mRows * oY + oX];
-            map[mRows * oY + oX] = temp;
-            Debug.WriteLine("map!");
-            foreach (var item in map)
-            {
-                Debug.WriteLine(item);
-            }
             //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
             Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
             Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
-//
-//            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
-//            if (nX == oX && nY == oY)
-//            {
-//                return;
-//            }
-//            //  myCanvas.Children.Add(image);
-//            if (map[mRows* nY + nX] == -1)
-//            {
-//                map[mRows * nY + nX] = map[mRows * oY + oX];
-//                map[mRows * oY + oX] = -1;
-//            }
+            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
 
-
-
-//
-
+            //  myCanvas.Children.Add(image);
+            var temp = map[mRows * nY + nX];
+                map[mRows * nY + nX] = map[mRows * oY + oX];
+                map[mRows * oY + oX] = temp;
+  
             if (checkWin() == true)
             {
                 MessageBox.Show("Win");
@@ -692,7 +715,6 @@ namespace puzzleABC
                 isDragging = false;
                 gameOver = true;
             }
-
         }
 
 
