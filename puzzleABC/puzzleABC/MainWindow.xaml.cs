@@ -420,15 +420,24 @@ namespace puzzleABC
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
                 var cellY = (int)(position.Y - startY) / cellHeight;
+                var curCell = new Tuple<int, int>(-1, -1);
+
+                if (cellX < mCols && cellX >= 0 && cellY < mRows && cellY >= 0 && godhand == 1)
+                {
+                    curCell = new Tuple<int, int>(cellX, cellY);
+                    Debug.WriteLine($"curCell: {cellX} - {cellY}");
+                    godhand--;
+                }
+
                 isDragging = false;
                 if (lastCell == null)
                 {
                     return;
                 }
-                if (canMove(cellX, cellY, lastCell.Item1, lastCell.Item2))
+                if (canMove(curCell.Item1, curCell.Item2, lastCell.Item1, lastCell.Item2))
                 {
                     Debug.WriteLine("true");
-                    doMove(cellX, cellY, lastCell.Item1, lastCell.Item2);
+                    doMove(curCell.Item1, curCell.Item2, lastCell.Item1, lastCell.Item2);
                 }
                 else
                 {
@@ -439,7 +448,7 @@ namespace puzzleABC
             }
 
         }
-
+        int godhand = 0;
         private void beginDrag(object sender, MouseButtonEventArgs e)
         {
             if (!gameOver)
@@ -447,86 +456,15 @@ namespace puzzleABC
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
                 var cellY = (int)(position.Y - startY) / cellHeight;
-                if (cellX < mCols && cellX >= 0 && cellY < mRows  && cellY >= 0)
+
+                if (cellX < mCols && cellX >= 0 && cellY < mRows && cellY >= 0 && godhand == 0)
                 {
+
                     lastCell = new Tuple<int, int>(cellX, cellY);
-                    Debug.WriteLine($"Update: {cellX} - {cellY}");
+                    Debug.WriteLine($"lastCell: {cellX} - {cellY}");
+                    godhand++;
                 }
-                else
-                {
-                    if(cellX < 0)
-                    {
-                        if(cellY < mRows && cellY >= 0)
-                        {
-                            lastCell = new Tuple<int, int>(0, cellY);
-                        }
-                        else
-                        {
-                            if(cellY >= mRows)
-                            {
-                                lastCell = new Tuple<int, int>(0, mRows-1);
-                            }
-                            else
-                            {
-                                lastCell = new Tuple<int, int>(0, 0);
-                            }
-                        }
-                    }
-                    if (cellX >= mCols)
-                    {
-                        if (cellY < mRows && cellY >= 0)
-                        {
-                            lastCell = new Tuple<int, int>(mCols-1, cellY);
-                        }
-                        else
-                        {
-                            if (cellY >= mRows)
-                            {
-                                lastCell = new Tuple<int, int>(mCols - 1, mRows - 1);
-                            }
-                            else
-                            {
-                                lastCell = new Tuple<int, int>(mCols - 1, 0);
-                            }
-                        }
-                    }
-                    if (cellY < 0)
-                    {
-                        if (cellX < mCols && cellX >= 0)
-                        {
-                            lastCell = new Tuple<int, int>(cellX, 0);
-                        }
-                        else
-                        {
-                            if (cellX >= mCols)
-                            {
-                                lastCell = new Tuple<int, int>(mCols-1, 0);
-                            }
-                            else
-                            {
-                                lastCell = new Tuple<int, int>(0, 0);
-                            }
-                        }
-                    }
-                    if (cellY < 0)
-                    {
-                        if (cellX < mCols && cellX >= 0)
-                        {
-                            lastCell = new Tuple<int, int>(cellX, mRows-1);
-                        }
-                        else
-                        {
-                            if (cellX >= mCols)
-                            {
-                                lastCell = new Tuple<int, int>(mCols - 1, mRows - 1);
-                            }
-                            else
-                            {
-                                lastCell = new Tuple<int, int>(0, mRows - 1);
-                            }
-                        }
-                    }
-                }
+
                 _selectedCropImage = sender as Image;
                 _lastPosition = e.GetPosition(this);
                 isDragging = true;
@@ -693,15 +631,16 @@ namespace puzzleABC
         {
             //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
-            Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
-            Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
-            Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
-
             //  myCanvas.Children.Add(image);
-            var temp = map[mRows * nY + nX];
+            if (true)
+            {
+                var temp = map[mRows * nY + nX];
                 map[mRows * nY + nX] = map[mRows * oY + oX];
                 map[mRows * oY + oX] = temp;
-  
+                Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
+                Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
+                Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
+            }
             if (checkWin() == true)
             {
                 MessageBox.Show("Win");
