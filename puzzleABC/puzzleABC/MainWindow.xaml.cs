@@ -631,14 +631,15 @@ namespace puzzleABC
         {
             //    myCanvas.Children.Add(image);
             _selectedCropImage.Uid = $"{map[mRows * oY + oX]}";
+            Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
+            Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
             //  myCanvas.Children.Add(image);
-            if (true)
+            if (nX !=oX || nY != oY)
             {
                 var temp = map[mRows * nY + nX];
                 map[mRows * nY + nX] = map[mRows * oY + oX];
                 map[mRows * oY + oX] = temp;
-                Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
-                Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
+                
                 Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
             }
             if (checkWin() == true)
