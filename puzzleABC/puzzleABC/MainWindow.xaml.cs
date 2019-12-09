@@ -634,6 +634,10 @@ namespace puzzleABC
             Canvas.SetLeft(_selectedCropImage, startX + nX * cellWidth + 1);
             Canvas.SetTop(_selectedCropImage, startY + nY * cellHeight + 1);
             //  myCanvas.Children.Add(image);
+            if (nX == oX && nY == oY)
+            {
+                return;
+            }
             if (nX !=oX || nY != oY)
             {
                 var temp = map[mRows * nY + nX];
