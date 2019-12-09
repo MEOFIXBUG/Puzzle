@@ -20,7 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <!--main canvas to cantain croppedimage-->
-        <Canvas Grid.Column="0" Name="myCanvas" Margin="20" MouseMove="Mouse_Move">
+        <Canvas Grid.Column="0" Name="myCanvas"  MouseMove="Mouse_Move">
 
         </Canvas>
 

@@ -26,8 +26,8 @@ namespace puzzleABC
             InitializeComponent();
             this.DataContext = this;
         }
-        const int startX = 0;
-        const int startY = 0;
+        const int startX = 20;
+        const int startY = 20;
         int cellHeight;
         int cellWidth;
         const int mRows = 3;
@@ -41,6 +41,7 @@ namespace puzzleABC
         Image _selectedCropImage = null;
         Point _lastPosition;
         Tuple<int, int> lastCell;
+        Tuple<int, int> curCell;
         bool gameOver = true;
 
         Timer timer;
@@ -420,7 +421,6 @@ namespace puzzleABC
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
                 var cellY = (int)(position.Y - startY) / cellHeight;
-                var curCell = new Tuple<int, int>(-1, -1);
 
                 if (cellX < mCols && cellX >= 0 && cellY < mRows && cellY >= 0 && godhand == 1)
                 {
@@ -438,11 +438,13 @@ namespace puzzleABC
                 {
                     Debug.WriteLine("true");
                     doMove(curCell.Item1, curCell.Item2, lastCell.Item1, lastCell.Item2);
+
                 }
                 else
                 {
                     Debug.WriteLine("false");
                     doMove(lastCell.Item1, lastCell.Item2, lastCell.Item1, lastCell.Item2);
+                    godhand = 0;
                 }
 
             }
