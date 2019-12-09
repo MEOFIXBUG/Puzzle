@@ -421,7 +421,7 @@ namespace puzzleABC
                 var position = e.GetPosition(this);
                 var cellX = (int)(position.X - startX) / cellWidth;
                 var cellY = (int)(position.Y - startY) / cellHeight;
-
+               
                 if (cellX < mCols && cellX >= 0 && cellY < mRows && cellY >= 0 && godhand == 1)
                 {
                     curCell = new Tuple<int, int>(cellX, cellY);
@@ -431,6 +431,10 @@ namespace puzzleABC
 
                 isDragging = false;
                 if (lastCell == null)
+                {
+                    return;
+                }
+                if (curCell == null)
                 {
                     return;
                 }
@@ -648,6 +652,8 @@ namespace puzzleABC
                 
                 Debug.WriteLine($"{nX} - {nY} , old: {oX} - {oY}");
             }
+            lastCell = null;
+            curCell = null;
             if (checkWin() == true)
             {
                 MessageBox.Show("Win");
